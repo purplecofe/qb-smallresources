@@ -1,10 +1,11 @@
-local QBCore = exports['qb-core']:GetCoreObject()
 local washingVehicle = false
+local ped, pos, veh = nil
+local QBCore = exports['qb-core']:GetCoreObject()
 
 local function DrawText3Ds(x, y, z, text)
 	SetTextScale(0.35, 0.35)
-    SetTextFont(4)
-    SetTextProportional(true)
+    SetTextFont(1)
+    SetTextProportional(1)
     SetTextColour(255, 255, 255, 215)
     SetTextEntry("STRING")
     SetTextCentre(true)
@@ -16,56 +17,117 @@ local function DrawText3Ds(x, y, z, text)
     ClearDrawOrigin()
 end
 
+RegisterNetEvent('qb-carwash:client:CarWashMenu', function()
+    exports['qb-menu']:openMenu({
+        {
+            header = "Car Wash Options",
+            isMenuHeader = true
+        },
+        {
+            header = "汽車清潔",
+            txt = "進行清洗和打蠟!",
+            params = {
+                event = "qb-carwash:client:setselection",
+                args = {
+                    selection = 'exterior',
+                }
+            }
+        },
+        {
+            header = "汽車美容",
+            txt = "進行全方位的整理!",
+            params = {
+                event = "qb-carwash:client:setselection",
+                args = {
+                    selection = 'interior',
+                }
+            }
+        },
+        {
+            header = "關閉 (ESC)",
+            params = {
+                event = exports['qb-menu']:closeMenu(),
+            }
+        },
+    })
+end)
+
+RegisterNetEvent('qb-carwash:client:setselection', function(data)
+    curselection = data.selection
+    TriggerServerEvent('qb-carwash:server:washCar')
+end)
+
+
 RegisterNetEvent('qb-carwash:client:washCar', function()
-    local PlayerPed = PlayerPedId()
-    local PedVehicle = GetVehiclePedIsIn(PlayerPed, false)
     washingVehicle = true
-    QBCore.Functions.Progressbar("search_cabin", "Vehicle is being washed ..", math.random(4000, 8000), false, true, {
+
+    local progtext = '嗡嗡聲（機器運轉音）...'
+    local progtime = math.random(4000, 8000)
+
+    if curselection == 'interior' then
+        progtext = '用吸塵器吸出有蟲子的包裝紙...'
+        progtime = math.random(12000, 20000)
+    end
+
+    QBCore.Functions.Progressbar("search_cabin", progtext, progtime, false, true, {
         disableMovement = true,
         disableCarMovement = true,
         disableMouse = false,
         disableCombat = true,
     }, {}, {}, {}, function() -- Done
-        SetVehicleDirtLevel(PedVehicle, 0.0)
-        SetVehicleUndriveable(PedVehicle, false)
-        WashDecalsFromVehicle(PedVehicle, 1.0)
+        if curselection == 'exterior' then
+            SetVehicleDirtLevel(veh)
+            SetVehicleUndriveable(veh, false)
+            WashDecalsFromVehicle(veh, 1.0)
+        elseif curselection == 'interior' then 
+            local plate = QBCore.Functions.GetPlate(veh) 
+            TriggerServerEvent('evidence:server:RemoveCarEvidence', plate) 
+        end
         washingVehicle = false
     end, function() -- Cancel
-        QBCore.Functions.Notify("Washing canceled ..", "error")
+        QBCore.Functions.Notify("清洗取消 ..", "error")
         washingVehicle = false
     end)
 end)
 
 CreateThread(function()
-    local sleep
+	while true do
+        if LocalPlayer.state.isLoggedIn then
+	        ped = PlayerPedId()   
+            veh = GetVehiclePedIsIn(ped)
+        end
+        Wait(1000)
+	end
+end)
+
+CreateThread(function()
     while true do
-        local PlayerPed = PlayerPedId()
-        local PlayerPos = GetEntityCoords(PlayerPed)
-        local PedVehicle = GetVehiclePedIsIn(PlayerPed, false)
-        local Driver = GetPedInVehicleSeat(PedVehicle, -1)
-        local dirtLevel = GetVehicleDirtLevel(PedVehicle)
-        sleep = 1000
-        if IsPedInAnyVehicle(PlayerPed, false) then
-            for k in pairs(Config.CarWash) do
-                local dist = #(PlayerPos - vector3(Config.CarWash[k]["coords"]["x"], Config.CarWash[k]["coords"]["y"], Config.CarWash[k]["coords"]["z"]))
-                if dist <= 7.5 and Driver == PlayerPed then
-                    sleep = 0
-                    if not washingVehicle then
-                        DrawText3Ds(Config.CarWash[k]["coords"]["x"], Config.CarWash[k]["coords"]["y"], Config.CarWash[k]["coords"]["z"], '~g~E~w~ - Washing car ($'..Config.DefaultPrice..')')
-                        if IsControlJustPressed(0, 38) then
-                            if dirtLevel > Config.DirtLevel then
-                                TriggerServerEvent('qb-carwash:server:washCar')
-                            else
-                                QBCore.Functions.Notify("The vehicle isn't dirty", 'error')
+        local inRange = false
+
+        if IsPedInAnyVehicle(ped) then
+            pos = GetEntityCoords(ped)
+            for k, v in pairs(Config.CarWash) do
+                local dist = #(pos - vector3(Config.CarWash[k]["coords"]["x"], Config.CarWash[k]["coords"]["y"], Config.CarWash[k]["coords"]["z"]))
+                if dist <= 10 then
+                    inRange = true
+                    if dist <= 7.5 then
+                        if GetPedInVehicleSeat(veh, -1) == ped then
+                            if not washingVehicle then
+                                DrawText3Ds(Config.CarWash[k]["coords"]["x"], Config.CarWash[k]["coords"]["y"], Config.CarWash[k]["coords"]["z"], ('E - Use Carwash ($%s)'):format(Config.DefaultPrice))
+                                if IsControlJustPressed(0, 38) then
+                                    TriggerEvent('qb-carwash:client:CarWashMenu')
+                                end
                             end
                         end
-                    else
-                        DrawText3Ds(Config.CarWash[k]["coords"]["x"], Config.CarWash[k]["coords"]["y"], Config.CarWash[k]["coords"]["z"], 'The car wash is not available ..')
                     end
                 end
             end
         end
-        Wait(sleep)
+
+        if not inRange then
+            Wait(5000)
+        end
+        Wait(0)
     end
 end)
 
