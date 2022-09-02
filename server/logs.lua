@@ -30,6 +30,7 @@ local Webhooks = {
     ['keylabs'] = 'https://discord.com/api/webhooks/959893707971252264/9OK0uZEOKUSUA9US0nDtfp3SRG09bE-4Frz4sSXJiHhXhQnFJr9USkBGdcvW2VU_dpQH',
     ['carboosting'] = 'https://discord.com/api/webhooks/959895878573916260/MuA198i1jCy3qI59s-QpQawoH16MEGzSqgs55zacguUDhsSODnW-NMk399X5tshPChYh',
     ['truckrobbery'] = 'https://discord.com/api/webhooks/960526360017776680/7oKhkLZCLfYFK8GnCet5-5HB5LgCX3yMS9XT2er1guMym7GJSjxwhKxukZA9FfZ3-Hwi',
+    ['vehicleupgrades'] = 'https://discord.com/api/webhooks/1013852883671855124/zAiPXyrE9CE6CWd_GtZq2RdqsXWtMqgIQHmfCcyAkTDWgy-T_c8gfY5EyzCP4MMoh01G',
 }
 
 local Colors = { -- https://www.spycolor.com/
