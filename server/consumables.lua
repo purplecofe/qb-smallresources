@@ -161,6 +161,12 @@ QBCore.Functions.CreateUseableItem("advancedlockpick", function(source)
     TriggerClientEvent("lockpicks:UseLockpick", source, true)
 end)
 
+----------- / Bank robbery
+
+QBCore.Functions.CreateUseableItem("nightvision", function(source)
+    TriggerClientEvent("nightvision:UseNightvision", source)
+end)
+
 ----------- / Unused
 
 -- QBCore.Functions.CreateUseableItem("smoketrailred", function(source, item)
