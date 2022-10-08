@@ -167,6 +167,12 @@ QBCore.Functions.CreateUseableItem("nightvision", function(source)
     TriggerClientEvent("nightvision:UseNightvision", source)
 end)
 
+----------- / Ambulance
+
+QBCore.Functions.CreateUseableItem("ifaks",function(source, item)
+    local src = source
+    TriggerClientEvent("consumables:client:UseiFak", src, item.name)
+end)
 ----------- / Unused
 
 -- QBCore.Functions.CreateUseableItem("smoketrailred", function(source, item)
@@ -295,4 +301,12 @@ RegisterNetEvent('consumables:server:addHunger', function(amount)
 
     Player.Functions.SetMetaData('hunger', amount)
     TriggerClientEvent('hud:client:UpdateNeeds', source, amount, Player.PlayerData.metadata.thirst)
+end)
+
+RegisterNetEvent('consumables:server:UseiFak', function()
+    local Player = QBCore.Functions.GetPlayer(source)
+
+    if not Player then return end
+
+    Player.Functions.RemoveItem('ifaks', 1)
 end)

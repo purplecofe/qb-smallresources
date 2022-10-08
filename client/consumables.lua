@@ -446,16 +446,37 @@ RegisterNetEvent('consumables:client:ResetArmor', function()
     end
 end)
 
--- RegisterNetEvent('consumables:client:UseRedSmoke', function()
---     if ParachuteEquiped then
---         local ped = PlayerPedId()
---         SetPlayerParachuteSmokeTrailColor(ped, 255, 0, 0)
---         SetPlayerCanLeaveParachuteSmokeTrail(ped, true)
---         TriggerEvent("inventory:client:Itembox", QBCore.Shared.Items["smoketrailred"], "remove")
---     else
---         QBCore.Functions.Notify("You need to have a paracute to activate smoke!", "error")
---     end
--- end)
+RegisterNetEvent("consumables:client:UseiFak", function()
+    local playerPed = PlayerPedId()
+    QBCore.Functions.Progressbar("use_bandage", "使用 iFak", 5000, false, true, {
+        disableMovement = false,
+        disableCarMovement = false,
+        disableMouse = false,
+        disableCombat = true,
+    }, {
+        animDict = "amb@world_human_clipboard@male@idle_a",
+        anim = "idle_c",
+        flags = 49,
+    }, {}, {}, function() -- Done
+        StopAnimTask(playerPed, "amb@world_human_clipboard@male@idle_a", "idle_c", 1.0)
+        TriggerServerEvent("consumables:server:UseiFak")
+        TriggerEvent("inventory:client:ItemBox", QBCore.Shared.Items["ifaks"], "remove")
+        TriggerServerEvent('hud:server:RelieveStress', 20)
+        TriggerEvent("hospital:client:HealInjuries", "full")
+        ResetPedMovementClipset(playerPed, 0.0)
+        local health = GetEntityHealth(playerPed)
+        local maxHealth = GetEntityMaxHealth(playerPed)
+        local newHealth = health + 25
+        if newHealth > maxHealth then
+            SetEntityHealth(playerPed, maxHealth)
+        else
+            SetEntityHealth(playerPed, newHealth)
+        end
+    end, function() -- Cancel
+        StopAnimTask(playerPed, "amb@world_human_clipboard@male@idle_a", "idle_c", 1.0)
+        QBCore.Functions.Notify("Fail", "error")
+    end)
+end)
 
 --Threads
 
